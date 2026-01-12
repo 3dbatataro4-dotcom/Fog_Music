@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Nocturne - V34.0 Fixed Charts</title>
+    <title>Nocturne - V35.0 Glowing Notes</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Noto+Serif+TC:wght@400;700&display=swap');
 
@@ -119473,7 +119473,7 @@ function getHighScore(songId, diff) {
     return (save[songId] && save[songId][diff]) ? save[songId][diff] : null;
 }
 
-// V34 Seeded RNG helper
+// Seeded RNG helper
 function createSeededRandom(seed) {
     return function() {
         seed = (seed * 9301 + 49297) % 233280;
@@ -119481,7 +119481,7 @@ function createSeededRandom(seed) {
     };
 }
 
-// --- GENERATOR (V34.0 FIXED CHARTS) ---
+// --- GENERATOR (V34+ SEEDED) ---
 function generateChart(jsonData, diff) {
     if (!jsonData || !jsonData.tracks) {
         return [
@@ -119539,7 +119539,7 @@ function generateChart(jsonData, diff) {
             activeHoldsSim.forEach(h => avoidX.push(h.x));
             placedX.forEach(px => avoidX.push(px));
 
-            // V34: Use rng() for position
+            // Seeded RNG for X position
             if (avoidX.length > 0) {
                 let refX = avoidX[0]; 
                 if (refX < 0.5) xPct = 0.6 + (rng() * 0.3); 
@@ -119568,13 +119568,12 @@ function generateChart(jsonData, diff) {
                 let threshold = 0.18;
                 let slideChance = (diff === 'HARD') ? 0.15 : 0.4; 
                 
-                // V34: Use rng() for slide generation
                 if (next.time - t < threshold && rng() < slideChance) { 
                     type = 3; 
                 }
             }
             
-            // V34: FLICK GENERATION (Updated for Easy/Normal)
+            // FLICK GENERATION
             if (type === 0) {
                 let flickChance = 0.0;
                 if (diff === 'EASY') flickChance = 0.05;
@@ -119582,7 +119581,7 @@ function generateChart(jsonData, diff) {
                 else if (diff === 'HARD' || diff === 'MASTER') flickChance = 0.06;
 
                 if (rng() < flickChance) {
-                    let r = rng(); // seeded random 0-1
+                    let r = rng();
                     if (diff === 'EASY') {
                         // Easy: L/R only
                         type = (r > 0.5) ? 4 : 5;
@@ -119919,9 +119918,12 @@ function loop() {
                     ctx.restore();
 
                 } else if (n.type === 1) { 
-                    // Big Tap
-                    ctx.fillStyle = "#000"; ctx.strokeStyle = songColor; ctx.lineWidth = 4;
+                    // Big Tap / Double - ADDED GLOW HERE
+                    ctx.save();
+                    ctx.shadowBlur = 25; ctx.shadowColor = "rgba(255,255,255,0.9)"; // White Halo
+                    ctx.fillStyle = "#000"; ctx.strokeStyle = songColor; ctx.lineWidth = 5;
                     ctx.fillRect(drawX-nw/2, ny-nh/2, nw, nh); ctx.strokeRect(drawX-nw/2, ny-nh/2, nw, nh);
+                    ctx.restore();
                 } else {
                     // Tap
                     ctx.fillStyle = "#fff"; ctx.fillRect(drawX-nw/2, ny-nh/2, nw, nh);
@@ -119963,8 +119965,8 @@ function handleInput(e) {
     const time = rawTime - (userOffset / 1000); 
     
     const rect = inputZone.getBoundingClientRect();
-    const NORMAL_X_WIN = width * 0.20; 
-    const SLIDE_X_WIN = width * 0.20; 
+    const NORMAL_X_WIN = width * 0.25; 
+    const SLIDE_X_WIN = width * 0.35; 
 
     touches.forEach(t => {
         const tx = t.clientX - rect.left;
